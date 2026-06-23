@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Wealth OS">
+<title>Wealth OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --g:#1D9E75;--gl:#E1F5EE;--gd:#0F6E56;
+  --r:#E24B4A;--rl:#FCEBEB;--rd:#A32D2D;
+  --a:#BA7517;--al:#FAEEDA;--ad:#854F0B;
+  --p:#534AB7;--pl:#EEEDFE;--pd:#3C3489;
+  --b:#185FA5;--bl:#E6F1FB;--bd:#0C447C;
+  --bg:#F8F7F4;--surface:#FFFFFF;--border:#E8E6E1;
+  --text:#1A1A18;--text2:#6B6A65;--text3:#A09F9A;
+  --radius:12px;--radius-sm:8px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#111110;--surface:#1C1C1A;--border:#2E2E2B;
+    --text:#F0EDE8;--text2:#8A8880;--text3:#5A5955;
+    --gl:#0A2E1F;--gd:#9FE1CB;
+    --pl:#1A1840;--pd:#AFA9EC;
+    --bl:#0A1E35;--bd:#85B7EB;
+    --al:#2A1E05;--ad:#FAC775;
+    --rl:#2A0A0A;--rd:#F09595;
+  }
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.5;overflow-x:hidden}
+.app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-bottom:80px}
+/* Header */
+.hdr{padding:16px 20px 8px;display:flex;align-items:flex-start;justify-content:space-between}
+.hdr-title{font-size:22px;font-weight:600;letter-spacing:-.5px}
+.hdr-sub{font-size:12px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace}
+/* Tab bar */
+.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tab{flex:1;padding:10px 4px 8px;border:none;background:transparent;color:var(--text3);font-size:10px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .15s}
+.tab.active{color:var(--g)}
+.tab svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.75;fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* Content */
+.pane{display:none;padding:0 16px;animation:fadein .15s ease}
+.pane.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.sec-lbl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+/* Scores */
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.score-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center}
+.score-n{font-size:20px;font-weight:600;font-family:'DM Mono',monospace;line-height:1}
+.score-l{font-size:10px;color:var(--text2);margin-top:3px;font-weight:500}
+/* Day type toggle */
+.day-toggle{display:flex;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);margin-bottom:10px;background:var(--bg)}
+.dt-opt{flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--text2);transition:.15s;text-align:center}
+.dt-opt.sel-build{background:var(--bl);color:var(--bd)}
+.dt-opt.sel-market{background:var(--gl);color:var(--gd)}
+/* Habits */
+.habit-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.habit-row:last-child{border-bottom:none;padding-bottom:0}
+.habit-row:first-child{padding-top:0}
+.hcheck{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:.2s;-webkit-appearance:none}
+.hcheck.on{background:var(--g);border-color:var(--g)}
+.hcheck svg{width:14px;height:14px;stroke:var(--text3);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:.15s}
+.hcheck.on svg{stroke:#fff}
+.hname{font-size:14px;font-weight:500;flex:1}
+.hsub{font-size:11px;color:var(--text2);margin-top:1px}
+.rbadge{background:var(--pl);color:var(--pd);font-size:10px;padding:1px 6px;border-radius:20px;font-weight:600;margin-left:5px;vertical-align:middle}
+/* Number inputs */
+.irow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.irow:last-child{border-bottom:none;padding-bottom:0}
+.irow:first-child{padding-top:0}
+.ilbl{flex:1;font-size:14px;font-weight:500}
+.isub{font-size:11px;color:var(--text2);margin-top:1px}
+.num-in{width:64px;text-align:right;font-size:15px;font-weight:600;font-family:'DM Mono',monospace;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 8px;background:var(--bg);color:var(--text)}
+/* Ring */
+.ring-wrap{display:flex;align-items:center;gap:12px}
+/* Nav */
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.nav-btn{padding:7px 14px;border:1px solid var(--border);background:transparent;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;font-weight:500}
+.nav-lbl{font-size:14px;font-weight:600;color:var(--text2)}
+/* Save bar */
+.save-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.save-status{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace}
+.save-btn{padding:9px 20px;background:var(--g);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:.15s}
+.save-btn:active{opacity:.85}
+.save-btn.ok{background:var(--gl);color:var(--gd)}
+/* Banner */
+.banner{background:var(--al);border:1px solid var(--a);color:var(--ad);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:500;margin-bottom:10px;text-align:center;display:none}
+/* Spend */
+.spend-big{font-size:30px;font-weight:600;font-family:'DM Mono',monospace}
+.prog{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0 4px}
+.prog-fill{height:100%;border-radius:3px;transition:.3s}
+.sp-row{display:flex;gap:8px;margin-bottom:8px}
+.sp-row input,.sp-row select{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif}
+.sp-row input[type=number]{flex:none;width:80px}
+.add-btn{padding:9px 16px;background:var(--g);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.sitem{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sitem:last-child{border-bottom:none}
+.sdel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:0 2px;line-height:1}
+/* Resist */
+.resist-box{background:var(--pl);border:1px solid var(--p);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.resist-title{font-size:13px;font-weight:600;color:var(--pd);margin-bottom:8px}
+.resist-text{font-size:13px;color:var(--pd);line-height:1.7}
+.ubtn{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;width:100%;margin-bottom:8px;font-family:'DM Sans',sans-serif;transition:.15s}
+.ubtn svg{width:18px;height:18px;stroke:var(--g);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ubtn-count{margin-left:auto;font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:var(--g)}
+.ubtn.flash{background:var(--gl);border-color:var(--g)}
+/* Month */
+.mcal-hdr{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
+.mcal-hdr span{font-size:10px;color:var(--text3);text-align:center;font-weight:600}
+.mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.mday{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;cursor:pointer;color:var(--text3);border:1px solid transparent;font-family:'DM Mono',monospace}
+.mday.today{border-color:var(--g);color:var(--g)}
+.mday.mkt{background:var(--gl);color:var(--gd)}
+.mday.bld{background:var(--bl);color:var(--bd)}
+.mday.partial{background:var(--al);color:var(--ad)}
+.mday.fut{opacity:.25;cursor:default}
+.drawer{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-top:8px}
+.drawer-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.drawer-title{font-size:14px;font-weight:600}
+.close-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:22px;line-height:1;padding:0}
+/* Coach */
+.coach-intro{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.coach-intro p{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px}
+.coach-open-btn{display:block;width:100%;padding:14px;background:var(--g);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;transition:.15s}
+.coach-open-btn:active{opacity:.85}
+.qbtn{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;width:100%;margin-bottom:8px;font-family:'DM Sans',sans-serif;text-align:left}
+.qbtn svg{width:18px;height:18px;stroke:var(--g);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+/* Ratio bar */
+.ratio-bar{display:flex;border-radius:4px;overflow:hidden;height:14px;margin:6px 0}
+/* Warn */
+.warn{background:var(--al);border:1px solid var(--a);color:var(--ad);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;font-weight:500;margin-bottom:8px}
+/* Textarea */
+textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:13px;resize:none;height:72px;font-family:'DM Sans',sans-serif;line-height:1.5}
+textarea::placeholder{color:var(--text3)}
+/* Hint text */
+.hint{font-size:11px;color:var(--text3);margin:-2px 0 10px;padding:0 2px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title" id="hdr-date">Wealth OS</div>
+    <div class="hdr-sub" id="hdr-sub">June sprint · £1m before 30</div>
+  </div>
+  <div id="ring-el" style="width:48px;height:48px;flex-shrink:0"></div>
+</div>
+
+<!-- DAILY -->
+<div class="pane active" id="pane-daily">
+  <div class="nav-row">
+    <button class="nav-btn" id="btn-prev" onclick="changeDay(-1)">← Prev</button>
+    <span class="nav-lbl" id="nav-lbl">Today</span>
+    <button class="nav-btn" id="btn-next" onclick="changeDay(1)" style="visibility:hidden">Next →</button>
+  </div>
+  <div class="banner" id="view-banner"></div>
+
+  <div class="day-toggle">
+    <button class="dt-opt" id="dt-build" onclick="setDayType('build')">🔨 Build day</button>
+    <button class="dt-opt" id="dt-market" onclick="setDayType('market')">📣 Market day</button>
+  </div>
+  <div class="hint" id="dt-hint"></div>
+
+  <div class="scores">
+    <div class="score-card"><div class="score-n" id="s-f" style="color:var(--g)">0%</div><div class="score-l">Foundation</div></div>
+    <div class="score-card"><div class="score-n" id="s-c" style="color:var(--p)">0</div><div class="score-l" id="s-c-lbl">Output</div></div>
+    <div class="score-card"><div class="score-n" id="s-m" style="color:var(--a)">0%</div><div class="score-l">Mastery</div></div>
+  </div>
+
+  <div class="sec-lbl">Foundation habits</div>
+  <div class="card" id="hab-f" style="margin-bottom:12px"></div>
+
+  <div class="sec-lbl" id="work-lbl">Daily output</div>
+  <div class="card" id="work-in" style="margin-bottom:12px"></div>
+
+  <div class="sec-lbl">Self-mastery</div>
+  <div class="card" id="hab-m" style="margin-bottom:12px"></div>
+
+  <div class="sec-lbl">Notes / lesson today</div>
+  <textarea id="day-notes" placeholder="What did you build, learn or ship today?" style="margin-bottom:14px"></textarea>
+
+  <div class="sec-lbl">Tonight's implementation intentions</div>
+  <div class="card" style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5">Write tomorrow's three when/then actions <em>tonight</em>. Specific and physical — not "work on website" but "when I sit down after cold shower, I will open the homepage file and write one headline."</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--g);margin-top:10px;flex-shrink:0">1.</span>
+        <textarea id="ii-1" placeholder="When _______, I will _______." style="height:52px;margin-bottom:0;font-size:13px"></textarea>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--g);margin-top:10px;flex-shrink:0">2.</span>
+        <textarea id="ii-2" placeholder="When _______, I will _______." style="height:52px;margin-bottom:0;font-size:13px"></textarea>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--g);margin-top:10px;flex-shrink:0">3.</span>
+        <textarea id="ii-3" placeholder="When _______, I will _______." style="height:52px;margin-bottom:0;font-size:13px"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-row">
+    <span class="save-status" id="save-status">Not saved</span>
+    <button class="save-btn" id="save-btn" onclick="saveDay()">Save day</button>
+  </div>
+</div>
+
+<!-- SPEND -->
+<div class="pane" id="pane-spend">
+  <div class="card">
+    <div class="sec-lbl">Weekly budget — June</div>
+    <div style="display:flex;align-items:baseline;gap:8px">
+      <span class="spend-big" id="sp-left" style="color:var(--g)">£66</span>
+      <span style="font-size:13px;color:var(--text2)">remaining this week</span>
+    </div>
+    <div class="prog"><div class="prog-fill" id="sp-prog" style="width:0%;background:var(--g)"></div></div>
+    <div style="font-size:12px;color:var(--text2)" id="sp-meta">£0 of £66 spent</div>
+  </div>
+
+  <div class="card">
+    <div class="sec-lbl">Add expense</div>
+    <div class="sp-row">
+      <input id="sp-desc" type="text" placeholder="Description" />
+      <input id="sp-amt" type="number" step="0.01" min="0" placeholder="£0" />
+    </div>
+    <div class="sp-row" style="margin-bottom:0">
+      <select id="sp-cat">
+        <option>Food &amp; drink</option>
+        <option>Transport</option>
+        <option>Subscriptions</option>
+        <option>Business</option>
+        <option>Health</option>
+        <option>Other</option>
+      </select>
+      <button class="add-btn" onclick="addSpend()">Add</button>
+    </div>
+  </div>
+
+  <div class="card" id="sp-today-card">
+    <div class="sec-lbl">Today's expenses</div>
+    <div id="sp-list"><span style="font-size:13px;color:var(--text2)">None yet.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-lbl">June totals by category</div>
+    <div id="sp-summary" style="font-size:13px;color:var(--text2)">No entries yet.</div>
+  </div>
+</div>
+
+<!-- RESIST -->
+<div class="pane" id="pane-resist">
+  <div class="resist-box">
+    <div class="resist-title">90-second pressure protocol</div>
+    <div class="resist-text">
+      <strong>1.</strong> Say it: <em>"This is resistance. My brain wants relief. I move toward uncertainty."</em><br>
+      <strong>2.</strong> Three slow breaths. Feet on floor. Phone face-down.<br>
+      <strong>3.</strong> Write the single next physical action.<br>
+      <strong>4.</strong> Set a 2-minute timer. Start before confidence arrives.
+    </div>
+  </div>
+
+  <div class="sec-lbl">Tap when you catch an urge — before acting</div>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="sec-lbl">What thought fired just before the urge?</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;line-height:1.5">This is the CBT layer. The urge is the symptom — the automatic thought is the actual target. Log it here before you log the urge below.</div>
+    <textarea id="thought-catch" placeholder='e.g. "This is too big, I don't know where to start" / "I'll do it later when I have more energy" / "I need more info first"' style="height:72px;margin-bottom:8px;font-size:12px"></textarea>
+    <button onclick="logThought()" style="padding:7px 14px;background:var(--p);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px">Log thought</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="thought-log"></div>
+  </div>
+
+  <button class="ubtn" id="ub-vape" onclick="logUrge('vape')">
+    <svg viewBox="0 0 24 24"><path d="M3 8h14M3 12h14M17 8a4 4 0 0 1 4 4"/><circle cx="19" cy="16" r="2"/></svg>
+    Vaping urge
+    <span class="ubtn-count" id="uc-vape">0</span>
+  </button>
+  <button class="ubtn" id="ub-phone" onclick="logUrge('phone')">
+    <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    Phone scroll urge
+    <span class="ubtn-count" id="uc-phone">0</span>
+  </button>
+  <button class="ubtn" id="ub-skin" onclick="logUrge('skin')">
+    <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2A10 10 0 0 1 4 13v-1a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v3"/></svg>
+    Skin picking urge
+    <span class="ubtn-count" id="uc-skin">0</span>
+  </button>
+  <button class="ubtn" id="ub-escape" onclick="logUrge('escape')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="9" x2="14" y2="15"/></svg>
+    Avoidance / escape urge
+    <span class="ubtn-count" id="uc-escape">0</span>
+  </button>
+
+  <div class="card" style="margin-top:4px">
+    <div class="sec-lbl">Intercepted today</div>
+    <div id="urge-total" style="font-size:30px;font-weight:600;font-family:'DM Mono',monospace;color:var(--g)">0</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:2px;margin-bottom:8px">urges caught before acting</div>
+    <div id="urge-breakdown" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-lbl">Anti-drift rules</div>
+    <div style="font-size:13px;line-height:1.9;color:var(--text2)">
+      <div>1. No model change before 30 days of real market evidence.</div>
+      <div>2. No course or tool counts unless it produces outreach or revenue.</div>
+      <div>3. Content is a channel — post, measure, learn, improve.</div>
+      <div>4. Evidence before aesthetics. Credibility before polish.</div>
+      <div>5. Never miss twice. A reset day follows a bad day.</div>
+    </div>
+  </div>
+</div>
+
+<!-- MONTH -->
+<div class="pane" id="pane-month">
+  <div class="card">
+    <div class="sec-lbl">June 2026</div>
+    <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2)"><span style="width:12px;height:12px;background:var(--gl);border-radius:3px;display:inline-block"></span>Market day</span>
+      <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2)"><span style="width:12px;height:12px;background:var(--bl);border-radius:3px;display:inline-block"></span>Build day</span>
+      <span style="font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2)"><span style="width:12px;height:12px;background:var(--al);border-radius:3px;display:inline-block"></span>Partial</span>
+    </div>
+    <div class="mcal-hdr"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+    <div class="mcal" id="mcal"></div>
+  </div>
+
+  <div id="m-drawer" style="display:none" class="drawer">
+    <div class="drawer-hdr">
+      <span class="drawer-title" id="m-drawer-title">—</span>
+      <button class="close-btn" onclick="document.getElementById('m-drawer').style.display='none'">×</button>
+    </div>
+    <div id="m-drawer-body"></div>
+  </div>
+
+  <div class="scores" style="margin-top:8px">
+    <div class="score-card"><div class="score-n" id="m-streak" style="color:var(--g)">0</div><div class="score-l">Streak</div></div>
+    <div class="score-card"><div class="score-n" id="m-logged" style="color:var(--p)">0</div><div class="score-l">Logged</div></div>
+    <div class="score-card"><div class="score-n" id="m-rev" style="color:var(--a)">£0</div><div class="score-l">Revenue</div></div>
+  </div>
+
+  <div class="card" style="margin-top:4px">
+    <div class="sec-lbl">Sprint targets</div>
+    <div style="font-size:12px;color:var(--text2)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Outreach</span><span id="t-out" style="font-family:'DM Mono',monospace">0/100</span></div>
+      <div class="prog" style="margin-bottom:8px"><div class="prog-fill" id="tm-out" style="width:0%;background:var(--g)"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Conversations</span><span id="t-conv" style="font-family:'DM Mono',monospace">0/15</span></div>
+      <div class="prog" style="margin-bottom:8px"><div class="prog-fill" id="tm-conv" style="width:0%;background:var(--p)"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Offers made</span><span id="t-off" style="font-family:'DM Mono',monospace">0/3</span></div>
+      <div class="prog" style="margin-bottom:8px"><div class="prog-fill" id="tm-off" style="width:0%;background:var(--a)"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Build tasks</span><span id="t-bld" style="font-family:'DM Mono',monospace">0</span></div>
+      <div class="prog"><div class="prog-fill" id="tm-bld" style="width:33%;background:var(--b)"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-lbl">Build / market ratio</div>
+    <div id="ratio-warn"></div>
+    <div class="ratio-bar" id="ratio-bar"></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2)"><span id="ratio-b-lbl">0 build</span><span id="ratio-m-lbl">0 market</span></div>
+  </div>
+</div>
+
+<!-- COACH -->
+<div class="pane" id="pane-coach">
+  <div class="card">
+    <div class="sec-lbl">How this works</div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px">
+      Tap a prompt below. It opens Claude.ai with your full day's data pre-loaded so the coach knows exactly where you're at — foundation score, commercial output, urges intercepted, build/market ratio — without you having to explain anything.
+    </p>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6">
+      Uses your Claude Pro subscription. No extra cost.
+    </p>
+  </div>
+
+  <div class="sec-lbl">Quick prompts</div>
+
+  <button class="qbtn" onclick="openCoach('review')">
+    <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Review my day — give me a score out of 10
+  </button>
+  <button class="qbtn" onclick="openCoach('resistance')">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    I feel resistance right now — help me
+  </button>
+  <button class="qbtn" onclick="openCoach('next')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 8 16 12 12 16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    What's my most important action right now?
+  </button>
+  <button class="qbtn" onclick="openCoach('ratio')">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Am I hiding in build mode to avoid market contact?
+  </button>
+  <button class="qbtn" onclick="openCoach('urge')">
+    <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    I caught an urge — help me understand my pattern
+  </button>
+  <button class="qbtn" onclick="openCoach('custom')">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Open Claude with my full context loaded
+  </button>
+</div>
+
+</div><!-- end .app -->
+
+<!-- TAB BAR -->
+<div class="tabs">
+  <button class="tab active" id="tab-daily" onclick="goTab('daily')">
+    <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Daily
+  </button>
+  <button class="tab" id="tab-spend" onclick="goTab('spend')">
+    <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    Spend
+  </button>
+  <button class="tab" id="tab-resist" onclick="goTab('resist')">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Resist
+  </button>
+  <button class="tab" id="tab-month" onclick="goTab('month')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Month
+  </button>
+  <button class="tab" id="tab-coach" onclick="goTab('coach')">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Coach
+  </button>
+</div>
+
+<script>
+const HAB_F=[
+  {id:'wake',n:'Wake by 06:30',s:'Non-negotiable start'},
+  {id:'shower',n:'Cold shower',s:'Physical reset'},
+  {id:'plan',n:'Day planned — top 3 written',s:'Specific tasks, not vague intentions'},
+  {id:'train',n:'Trained / active recovery',s:'Non-zero physical output'},
+  {id:'protein',n:'Protein / clean eating',s:'Fuel for performance'},
+  {id:'tidy',n:'10-min thorough tidy',s:'Full standard — no half-assing'},
+  {id:'chores',n:'Admin / chores done',s:'Nothing left festering'},
+  {id:'sleep',n:'Sleep target kept',s:'Protect recovery'},
+];
+const HAB_M=[
+  {id:'vape_c',n:'Vaping controlled',s:'Resisted or reduced urge',r:true},
+  {id:'phone_c',n:'Phone controlled',s:'No mindless scroll',r:true},
+  {id:'skin_c',n:'Skin picking stopped',s:'Caught and interrupted',r:true},
+  {id:'discomfort',n:'Moved toward discomfort',s:'Did the hard thing without waiting'},
+];
+const MARKET_C=[
+  {id:'mfr',n:'Market-facing rep done',s:'At least one real contact',t:'check'},
+  {id:'outreach',n:'Outreach sent',s:'Number of contacts',t:'num'},
+  {id:'calls',n:'Calls made',s:'Discovery or follow-up',t:'num'},
+  {id:'convos',n:'Conversations',s:'Meaningful exchanges',t:'num'},
+  {id:'offers',n:'Offers made',s:'Paid proposals or pilots',t:'num'},
+  {id:'revenue',n:'Revenue £',s:'Actual cash received',t:'currency'},
+];
+const BUILD_C=[
+  {id:'pages',n:'Pages / sections built',s:'Website, landing page, content',t:'num'},
+  {id:'workflows',n:'Workflows mapped / built',s:'n8n, automations, SOPs',t:'num'},
+  {id:'research',n:'Research sessions',s:'Prospect, niche, or tool research',t:'num'},
+  {id:'assets',n:'Assets created',s:'Copy, scripts, templates, offers',t:'num'},
+  {id:'tasks',n:'Admin / setup tasks',s:'Accounts, tools, integrations',t:'num'},
+];
+
+const CHECK_SVG='<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+let viewOffset=0;
+let state={dayType:'build',habits:{},work:{},urges:{vape:0,phone:0,skin:0,escape:0},notes:'',spends:[],ii:['','',''],thoughts:[]};
+let allDays={};
+
+function todayKey(){return fmtDate(new Date());}
+function fmtDate(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function pad(n){return String(n).padStart(2,'0');}
+function viewKey(){const d=new Date();d.setDate(d.getDate()+viewOffset);return fmtDate(d);}
+function isToday(){return viewOffset===0;}
+
+function load(){
+  try{const s=localStorage.getItem('wos-days');if(s)allDays=JSON.parse(s);}catch(e){}
+  const tk=todayKey();
+  if(allDays[tk]){state=JSON.parse(JSON.stringify(allDays[tk]));if(!state.spends)state.spends=[];if(!state.ii)state.ii=['','',''];if(!state.thoughts)state.thoughts=[];}
+  renderAll();
+}
+
+function changeDay(dir){
+  if(dir===1&&viewOffset===0)return;
+  persistCurrent();
+  viewOffset+=dir;
+  if(viewOffset>0)viewOffset=0;
+  const k=viewKey();
+  if(allDays[k])state=JSON.parse(JSON.stringify(allDays[k]));
+  else state={dayType:'build',habits:{},work:{},urges:{vape:0,phone:0,skin:0,escape:0},notes:'',spends:[],ii:['','',''],thoughts:[]};
+  if(!state.ii)state.ii=['','',''];if(!state.thoughts)state.thoughts=[];
+  renderAll();
+}
+
+function persistCurrent(){
+  state.notes=document.getElementById('day-notes').value;
+  allDays[viewKey()]=JSON.parse(JSON.stringify(state));
+}
+
+function renderAll(){
+  const d=new Date();d.setDate(d.getDate()+viewOffset);
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('hdr-date').textContent=days[d.getDay()]+' '+d.getDate()+' '+months[d.getMonth()];
+  document.getElementById('hdr-sub').textContent='Day '+d.getDate()+' · June sprint · £1m before 30';
+  const lbl=viewOffset===0?'Today':viewOffset===-1?'Yesterday':Math.abs(viewOffset)+' days ago';
+  document.getElementById('nav-lbl').textContent=lbl;
+  document.getElementById('btn-next').style.visibility=viewOffset<0?'visible':'hidden';
+  document.getElementById('btn-prev').style.visibility=viewOffset>-29?'visible':'hidden';
+  const ban=document.getElementById('view-banner');
+  if(!isToday()){ban.style.display='block';ban.textContent='Viewing '+lbl+' — changes will be saved on exit';}
+  else ban.style.display='none';
+  renderDayType();renderHabs();renderWork();updateScores();renderSpend();renderUrgeUI();
+  document.getElementById('day-notes').value=state.notes||'';
+  document.getElementById('ii-1').value=(state.ii&&state.ii[0])||'';
+  document.getElementById('ii-2').value=(state.ii&&state.ii[1])||'';
+  document.getElementById('ii-3').value=(state.ii&&state.ii[2])||'';
+  renderThoughtLog();
+  document.getElementById('save-status').textContent=isToday()?'Not saved':'Past day';
+  document.getElementById('save-btn').className='save-btn';
+  document.getElementById('save-btn').textContent=isToday()?'Save day':'Update';
+}
+
+function renderDayType(){
+  document.getElementById('dt-build').className='dt-opt'+(state.dayType==='build'?' sel-build':'');
+  document.getElementById('dt-market').className='dt-opt'+(state.dayType==='market'?' sel-market':'');
+  document.getElementById('dt-hint').textContent=state.dayType==='build'
+    ?'Build day: website, workflows, research, assets, setup. Valid progress — just don\'t hide here indefinitely.'
+    :'Market day: outreach, calls, conversations, offers. This is where revenue gets made.';
+}
+
+function setDayType(t){state.dayType=t;renderDayType();renderWork();updateScores();}
+
+function renderHabs(){
+  document.getElementById('hab-f').innerHTML=HAB_F.map(h=>`
+    <div class="habit-row">
+      <button class="hcheck ${state.habits[h.id]?'on':''}" onclick="togH('${h.id}')" aria-label="${h.n}">${CHECK_SVG}</button>
+      <div><div class="hname">${h.n}</div><div class="hsub">${h.s}</div></div>
+    </div>`).join('');
+  document.getElementById('hab-m').innerHTML=HAB_M.map(h=>`
+    <div class="habit-row">
+      <button class="hcheck ${state.habits[h.id]?'on':''}" onclick="togH('${h.id}')" aria-label="${h.n}">${CHECK_SVG}</button>
+      <div><div class="hname">${h.n}${h.r?'<span class="rbadge">resist</span>':''}</div><div class="hsub">${h.s}</div></div>
+    </div>`).join('');
+}
+
+function renderWork(){
+  const items=state.dayType==='market'?MARKET_C:BUILD_C;
+  document.getElementById('work-lbl').textContent=state.dayType==='market'?'Commercial reps':'Build outputs';
+  document.getElementById('s-c-lbl').textContent=state.dayType==='market'?'Commercial':'Build';
+  document.getElementById('work-in').innerHTML=items.map(h=>{
+    if(h.t==='check') return`<div class="habit-row"><button class="hcheck ${state.work[h.id]?'on':''}" onclick="togW('${h.id}')">${CHECK_SVG}</button><div><div class="hname">${h.n}</div><div class="hsub">${h.s}</div></div></div>`;
+    return`<div class="irow"><div><div class="ilbl">${h.n}</div><div class="isub">${h.s}</div></div><input class="num-in" type="number" min="0" ${h.t==='currency'?'step="0.01"':'step="1"'} value="${state.work[h.id]||0}" onchange="setW('${h.id}',this.value)"></div>`;
+  }).join('');
+}
+
+function togH(id){state.habits[id]=!state.habits[id];markUnsaved();renderHabs();updateScores();}
+function togW(id){state.work[id]=!state.work[id];markUnsaved();renderWork();updateScores();}
+function setW(id,v){state.work[id]=parseFloat(v)||0;markUnsaved();updateScores();}
+function markUnsaved(){document.getElementById('save-status').textContent='Unsaved';document.getElementById('save-btn').className='save-btn';}
+
+function updateScores(){
+  const fd=HAB_F.filter(h=>state.habits[h.id]).length;
+  const fp=Math.round(fd/HAB_F.length*100);
+  document.getElementById('s-f').textContent=fp+'%';
+  let cs=0;
+  if(state.dayType==='market') cs=(state.work.outreach||0)+(state.work.calls||0)*2+(state.work.convos||0)*2+(state.work.offers||0)*5+(state.work.mfr?3:0);
+  else cs=(state.work.pages||0)*2+(state.work.workflows||0)*2+(state.work.research||0)+(state.work.assets||0)*2+(state.work.tasks||0);
+  document.getElementById('s-c').textContent=cs;
+  const md=HAB_M.filter(h=>state.habits[h.id]).length;
+  const mp=Math.round(md/HAB_M.length*100);
+  document.getElementById('s-m').textContent=mp+'%';
+  drawRing(Math.round((fp+mp)/2));
+}
+
+function drawRing(pct){
+  const r=20,cx=24,cy=24,circ=2*Math.PI*r;
+  const dash=circ*(pct/100),gap=circ-dash;
+  const col=pct>=70?'var(--g)':pct>=40?'var(--a)':'var(--r)';
+  document.getElementById('ring-el').innerHTML=`<svg width="48" height="48" viewBox="0 0 48 48"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="3.5"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col}" stroke-width="3.5" stroke-dasharray="${dash.toFixed(1)} ${gap.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/><text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="11" font-weight="600" fill="${col}" font-family="DM Mono,monospace">${pct}%</text></svg>`;
+}
+
+function renderThoughtLog(){
+  const log=document.getElementById('thought-log');
+  if(!log)return;
+  if(!state.thoughts||state.thoughts.length===0){log.innerHTML='';return;}
+  log.innerHTML=state.thoughts.map(t=>`<span style="background:var(--pl);color:var(--pd);padding:3px 10px;border-radius:20px;font-size:11px;display:inline-block;margin:2px">"${t.text}" <span style="opacity:.6">${t.time}</span></span>`).join('');
+}
+
+function logThought(){
+  const el=document.getElementById('thought-catch');
+  if(!el)return;
+  const txt=el.value.trim();
+  if(!txt)return;
+  if(!state.thoughts)state.thoughts=[];
+  const d=new Date();
+  state.thoughts.push({text:txt,time:d.getHours()+':'+pad(d.getMinutes())});
+  el.value='';
+  markUnsaved();
+  renderThoughtLog();
+}
+
+function logUrge(t){
+  const thoughtEl=document.getElementById('thought-catch');
+  if(thoughtEl&&thoughtEl.value.trim()) logThought();
+  state.urges[t]=(state.urges[t]||0)+1;
+  markUnsaved();renderUrgeUI();
+  const b=document.getElementById('ub-'+t);
+  if(b){b.classList.add('flash');setTimeout(()=>b.classList.remove('flash'),500);}
+}
+
+function renderUrgeUI(){
+  ['vape','phone','skin','escape'].forEach(k=>{
+    const el=document.getElementById('uc-'+k);
+    if(el) el.textContent=state.urges[k]||0;
+  });
+  const total=Object.values(state.urges).reduce((a,b)=>a+b,0);
+  document.getElementById('urge-total').textContent=total;
+  const bd=document.getElementById('urge-breakdown');
+  const entries=Object.entries(state.urges).filter(([,v])=>v>0);
+  bd.innerHTML=entries.map(([k,v])=>`<span style="background:var(--pl);color:var(--pd);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;font-family:'DM Mono',monospace">${k}: ${v}×</span>`).join('');
+}
+
+function addSpend(){
+  const desc=document.getElementById('sp-desc').value.trim();
+  const amt=parseFloat(document.getElementById('sp-amt').value);
+  const cat=document.getElementById('sp-cat').value;
+  if(!desc||!amt||amt<=0)return;
+  if(!state.spends)state.spends=[];
+  state.spends.push({desc,amt,cat,date:viewKey(),id:Date.now()});
+  markUnsaved();
+  document.getElementById('sp-desc').value='';
+  document.getElementById('sp-amt').value='';
+  renderSpend();
+}
+
+function removeSpend(id){
+  state.spends=state.spends.filter(s=>s.id!==id);
+  markUnsaved();renderSpend();
+}
+
+function allSpends(){
+  const seen=new Set();const arr=[];
+  Object.values(allDays).forEach(d=>{(d.spends||[]).forEach(s=>{if(!seen.has(s.id)){seen.add(s.id);arr.push(s);}});});
+  (state.spends||[]).forEach(s=>{if(!seen.has(s.id)){seen.add(s.id);arr.push(s);}});
+  return arr;
+}
+
+function weekSpend(){
+  const now=new Date();const start=new Date(now);
+  start.setDate(start.getDate()-((start.getDay()+6)%7));
+  const sk=fmtDate(start);
+  return allSpends().filter(s=>s.date>=sk).reduce((a,s)=>a+s.amt,0);
+}
+
+function renderSpend(){
+  const w=weekSpend();const budget=66;const rem=budget-w;const pct=Math.min(Math.round(w/budget*100),100);
+  const spLeft=document.getElementById('sp-left');
+  spLeft.textContent='£'+Math.max(rem,0).toFixed(2);
+  spLeft.style.color=rem<10?'var(--r)':rem<20?'var(--a)':'var(--g)';
+  const prog=document.getElementById('sp-prog');
+  prog.style.width=pct+'%';
+  prog.style.background=pct>90?'var(--r)':pct>70?'var(--a)':'var(--g)';
+  document.getElementById('sp-meta').textContent='£'+w.toFixed(2)+' of £66 spent this week';
+  const vk=viewKey();
+  const todayS=(state.spends||[]).filter(s=>s.date===vk);
+  const list=document.getElementById('sp-list');
+  list.innerHTML=todayS.length===0
+    ?'<span style="font-size:13px;color:var(--text2)">No expenses today.</span>'
+    :todayS.map(s=>`<div class="sitem"><div><div style="font-weight:500">${s.desc}</div><div style="font-size:11px;color:var(--text2)">${s.cat}</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-family:\'DM Mono\',monospace;font-weight:600">£${s.amt.toFixed(2)}</span><button class="sdel" onclick="removeSpend(${s.id})" aria-label="Delete">×</button></div></div>`).join('');
+  const all=allSpends().filter(s=>s.date&&s.date.startsWith('2026-06'));
+  const total=all.reduce((a,s)=>a+s.amt,0);
+  const byCat={};all.forEach(s=>{byCat[s.cat]=(byCat[s.cat]||0)+s.amt;});
+  const sum=document.getElementById('sp-summary');
+  sum.innerHTML=total===0?'No entries yet.':`<div style="font-weight:600;margin-bottom:6px;font-family:\'DM Mono\',monospace">June total: £${total.toFixed(2)}</div>`+Object.entries(byCat).map(([c,a])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>${c}</span><span style="font-family:\'DM Mono\',monospace;font-weight:500">£${a.toFixed(2)}</span></div>`).join('');
+}
+
+function saveDay(){
+  state.notes=document.getElementById('day-notes').value;
+  state.ii=[
+    document.getElementById('ii-1').value,
+    document.getElementById('ii-2').value,
+    document.getElementById('ii-3').value,
+  ];
+  allDays[viewKey()]=JSON.parse(JSON.stringify(state));
+  try{localStorage.setItem('wos-days',JSON.stringify(allDays));}catch(e){}
+  document.getElementById('save-status').textContent='Saved '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const btn=document.getElementById('save-btn');
+  btn.className='save-btn ok';btn.textContent='Saved ✓';
+  setTimeout(()=>{btn.textContent=isToday()?'Save day':'Update';},2000);
+}
+
+function renderMonth(){
+  const grid=document.getElementById('mcal');
+  const tk=todayKey();const today=new Date();
+  const offset=(new Date(2026,5,1).getDay()+6)%7;
+  let cells='';
+  for(let i=0;i<offset;i++)cells+='<div></div>';
+  for(let d=1;d<=30;d++){
+    const key='2026-06-'+pad(d);
+    const isTod=key===tk;const isFut=key>tk;
+    const data=isTod?state:allDays[key];
+    let cls='mday';
+    if(isFut) cls+=' fut';
+    else if(isTod) cls+=' today';
+    else if(data){
+      const fp=HAB_F.filter(h=>data.habits&&data.habits[h.id]).length/HAB_F.length;
+      cls+=fp>=0.6?(data.dayType==='market'?' mkt':' bld'):' partial';
+    }
+    cells+=`<div class="${cls}" onclick="openDayDrawer('${key}',${d})">${d}</div>`;
+  }
+  grid.innerHTML=cells;
+  const allK=Object.keys(allDays).filter(k=>k.startsWith('2026-06'));
+  document.getElementById('m-logged').textContent=allK.length+(allDays[tk]?0:1);
+  const totalRev=Object.values(allDays).reduce((a,d)=>a+(d.work&&d.work.revenue||0),0)+(state.work.revenue||0);
+  document.getElementById('m-rev').textContent='£'+totalRev.toFixed(0);
+  let streak=0;
+  for(let i=0;i<30;i++){const dd=new Date(today);dd.setDate(dd.getDate()-i);const k=fmtDate(dd);const data=k===tk?state:allDays[k];if(data&&HAB_F.filter(h=>data.habits&&data.habits[h.id]).length/HAB_F.length>=0.5)streak++;else if(i>0)break;}
+  document.getElementById('m-streak').textContent=streak;
+  const totalOut=allK.reduce((a,k)=>a+(allDays[k].work&&allDays[k].work.outreach||0),0)+(state.dayType==='market'?state.work.outreach||0:0);
+  const totalConv=allK.reduce((a,k)=>a+(allDays[k].work&&allDays[k].work.convos||0),0)+(state.dayType==='market'?state.work.convos||0:0);
+  const totalOff=allK.reduce((a,k)=>a+(allDays[k].work&&allDays[k].work.offers||0),0)+(state.dayType==='market'?state.work.offers||0:0);
+  const totalBld=allK.reduce((a,k)=>a+(allDays[k].work&&(allDays[k].work.pages||0)+(allDays[k].work.workflows||0)+(allDays[k].work.assets||0)+(allDays[k].work.tasks||0)+(allDays[k].work.research||0)||0),0);
+  document.getElementById('t-out').textContent=totalOut+'/100';
+  document.getElementById('tm-out').style.width=Math.min(totalOut,100)+'%';
+  document.getElementById('t-conv').textContent=totalConv+'/15';
+  document.getElementById('tm-conv').style.width=Math.min(Math.round(totalConv/15*100),100)+'%';
+  document.getElementById('t-off').textContent=totalOff+'/3';
+  document.getElementById('tm-off').style.width=Math.min(Math.round(totalOff/3*100),100)+'%';
+  document.getElementById('t-bld').textContent=totalBld;
+  const buildDays=allK.filter(k=>allDays[k].dayType==='build').length+(state.dayType==='build'?1:0);
+  const marketDays=allK.filter(k=>allDays[k].dayType==='market').length+(state.dayType==='market'?1:0);
+  const total2=buildDays+marketDays||1;
+  const bPct=Math.round(buildDays/total2*100);
+  document.getElementById('ratio-bar').innerHTML=`<div style="flex:${bPct||1};background:var(--bl);min-width:${buildDays?6:0}px"></div><div style="flex:${100-bPct||1};background:var(--gl);min-width:${marketDays?6:0}px"></div>`;
+  document.getElementById('ratio-b-lbl').textContent=buildDays+' build';
+  document.getElementById('ratio-m-lbl').textContent=marketDays+' market';
+  const warn=document.getElementById('ratio-warn');
+  if(buildDays>=3&&marketDays===0) warn.innerHTML='<div class="warn">'+buildDays+' build days, 0 market days. You need real buyer contact soon.</div>';
+  else if(buildDays>marketDays*2&&buildDays>=4) warn.innerHTML='<div class="warn">Build days outnumbering market 2:1. Watch for drift into prep mode.</div>';
+  else warn.innerHTML='';
+}
+
+function openDayDrawer(key,d){
+  const data=key===todayKey()?state:allDays[key];
+  const drawer=document.getElementById('m-drawer');
+  const body=document.getElementById('m-drawer-body');
+  document.getElementById('m-drawer-title').textContent=d+' June — '+(data?data.dayType||'?':'no data');
+  if(!data){body.innerHTML='<p style="font-size:13px;color:var(--text2)">No data logged for this day.</p>';drawer.style.display='block';return;}
+  const fp=HAB_F.filter(h=>data.habits&&data.habits[h.id]).length;
+  const mp=HAB_M.filter(h=>data.habits&&data.habits[h.id]).length;
+  const w=data.work||{};
+  const workLines=data.dayType==='market'
+    ?`Outreach: ${w.outreach||0} · Calls: ${w.calls||0} · Convos: ${w.convos||0} · Offers: ${w.offers||0}${w.revenue?` · Revenue: £${w.revenue}`:''}` 
+    :`Pages: ${w.pages||0} · Workflows: ${w.workflows||0} · Assets: ${w.assets||0} · Research: ${w.research||0} · Tasks: ${w.tasks||0}`;
+  const urgeTotal=data.urges?Object.values(data.urges).reduce((a,b)=>a+b,0):0;
+  body.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="score-card"><div class="score-n" style="color:var(--g)">${Math.round(fp/HAB_F.length*100)}%</div><div class="score-l">Foundation</div></div>
+      <div class="score-card"><div class="score-n" style="color:var(--a)">${Math.round(mp/HAB_M.length*100)}%</div><div class="score-l">Mastery</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px;font-family:'DM Mono',monospace;line-height:1.7">${workLines}</div>
+    ${data.notes?`<div style="font-size:13px;background:var(--bg);padding:10px;border-radius:var(--radius-sm);line-height:1.5;color:var(--text)">${data.notes}</div>`:''}
+    ${urgeTotal?`<div style="font-size:12px;color:var(--text2);margin-top:8px">Urges intercepted: ${urgeTotal}</div>`:''}
+  `;
+  drawer.style.display='block';
+  drawer.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function buildCoachPrompt(type){
+  const fd=HAB_F.filter(h=>state.habits[h.id]).length;
+  const md=HAB_M.filter(h=>state.habits[h.id]).length;
+  const w=state.work||{};
+  const urgeTotal=Object.values(state.urges).reduce((a,b)=>a+b,0);
+  const allK=Object.keys(allDays).filter(k=>k.startsWith('2026-06'));
+  const buildDays=allK.filter(k=>allDays[k].dayType==='build').length+(state.dayType==='build'?1:0);
+  const marketDays=allK.filter(k=>allDays[k].dayType==='market').length+(state.dayType==='market'?1:0);
+  const ii=state.ii||['','',''];
+  const thoughts=state.thoughts||[];
+  const context=`[Wealth OS context — read before responding]
+I am a 25-year-old UK-based B2B sales/SAP consultant targeting £1 million net worth before 30. I use an Atomic Habits + CBT accountability system. Today's data:
+
+Day type: ${state.dayType} day
+Foundation habits: ${fd}/${HAB_F.length} (${Math.round(fd/HAB_F.length*100)}%)
+Self-mastery: ${md}/${HAB_M.length} (${Math.round(md/HAB_M.length*100)}%)
+${state.dayType==='market'?`Outreach: ${w.outreach||0}, Calls: ${w.calls||0}, Conversations: ${w.convos||0}, Offers: ${w.offers||0}, Revenue: £${w.revenue||0}`:`Pages built: ${w.pages||0}, Workflows: ${w.workflows||0}, Assets: ${w.assets||0}, Research sessions: ${w.research||0}, Tasks done: ${w.tasks||0}`}
+Urges intercepted today: ${urgeTotal} (vaping: ${state.urges.vape||0}, phone: ${state.urges.phone||0}, skin picking: ${state.urges.skin||0}, avoidance: ${state.urges.escape||0})
+Automatic thoughts logged today: ${thoughts.length>0?thoughts.map(t=>'"'+t.text+'"').join(', '):'None logged'}
+Implementation intentions for today: ${ii.filter(i=>i).length>0?ii.filter(i=>i).map((i,n)=>(n+1)+'. '+i).join(' | '):'None written'}
+Notes: ${state.notes||'None'}
+June so far: ${buildDays} build days, ${marketDays} market days
+Weekly budget: £66, spent £${weekSpend().toFixed(2)}
+
+Background: My biggest pattern is instant gratification to avoid discomfort — previously gaming and cannabis (both removed), now showing as vaping, phone scrolling, skin picking, and task avoidance. I respond to the War of Art / Pressfield framing of resistance. I use Atomic Habits identity-based change and CBT thought-catching. I need both near-term cash flow and long-term compounding wealth.
+
+Be direct. No flattery. No empty motivation. Keep it under 200 words.
+
+`;
+  const prompts={
+    review:context+'Review my day. Give me a score out of 10 with specific reasoning. What did I do well and what am I avoiding?',
+    resistance:context+'I feel resistance right now. Walk me through the pressure protocol and tell me specifically what I should do in the next 2 minutes.',
+    next:context+'What is the single most important action I should take in the next hour given where I am in my month?',
+    ratio:context+'Honestly assess my build vs market ratio. Am I hiding in preparation to avoid the discomfort of real buyer contact? What does the evidence say?',
+    urge:context+'I caught urges today. Help me understand the pattern and what triggers are driving them. What should I change?',
+    custom:context+'Give me a full accountability check-in. Review my foundation, commercial progress, resistance patterns, and spending. Tell me what I need to hear.',
+  };
+  return prompts[type]||prompts.custom;
+}
+
+function openCoach(type){
+  const prompt=buildCoachPrompt(type);
+  const encoded=encodeURIComponent(prompt);
+  window.open('https://claude.ai/new?q='+encoded,'_blank');
+}
+
+function goTab(name){
+  ['daily','spend','resist','month','coach'].forEach(t=>{
+    document.getElementById('pane-'+t).classList.toggle('active',t===name);
+    document.getElementById('tab-'+t).classList.toggle('active',t===name);
+  });
+  if(name==='month') renderMonth();
+}
+
+load();
+drawRing(0);
+</script>
+</body>
+</html>
